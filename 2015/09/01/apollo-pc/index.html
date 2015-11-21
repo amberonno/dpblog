@@ -1,0 +1,193 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"/><meta content="yes" name="apple-mobile-web-app-capable"/><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/><meta content="telephone=no" name="format-detection"/><meta name="description"/><title>阿波罗PC自开发内容 | dper-f2e</title><link rel="stylesheet" type="text/css" href="/css/normalize.css"/><link rel="stylesheet" type="text/css" href="/css/pure-min.css"/><link rel="stylesheet" type="text/css" href="/css/grids-responsive-min.css"/><link rel="stylesheet" type="text/css" href="/css/style.css"/><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"/><link rel="apple-touch-icon" href="/apple-touch-icon.png"/><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"/><link rel="alternate" type="application/atom+xml" href="/atom.xml"/></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">阿波罗PC自开发内容</h1><a id="logo" href="/">dper-f2e</a><p class="description">交易后台文档</p></div><div id="nav-menu"><a href="/" class="current"><i class="icon-home"> 首页</i></a><a href="/archives/"><i class="icon-archive"> 归档</i></a><a href="/about/"><i class="icon-about"> 关于</i></a><a href="/atom.xml"><i class="icon-rss"> 订阅</i></a></div></div><div id="layout" class="pure-g"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post post-page"><h1 class="post-title">阿波罗PC自开发内容</h1><div class="post-meta">2015-09-01 | </div><div class="post-content"><h1 id="阿波罗PC开发">阿波罗PC开发</h1><h1 id="1-_双向绑定">1. 双向绑定</h1><p>首先在需要双向绑定的类上面设置注解@linkedStateMixin。然后在构造函数内用this.setBiding(‘users’)设置绑定的store(redux1.0后改名为reducer)对象，此对象需要在this.props中存在，同时要求this.props中存在dispatch对象（redux产生的）</p>
+<pre><code><span class="keyword">import</span> linkedStateMixin from '../decorators/<span class="type">LinkedStateMixin</span>.js'
+
+<span class="annotation">@linkedStateMixin</span>
+export <span class="keyword">default</span> <span class="class"><span class="keyword">class</span> <span class="title">UserManager</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Component</span> {</span>
+    constructor(props) {
+        <span class="keyword">super</span>(props);
+        <span class="keyword">this</span>.setBinding(<span class="symbol">'user</span>s');
+    }
+     render() {               
+            <span class="keyword">return</span> (
+
+                    &lt;<span class="type">Input</span>
+                        <span class="class"><span class="keyword">type</span>=</span><span class="symbol">'tex</span>t'
+                        valueLink={<span class="keyword">this</span>.binding(<span class="symbol">'nameOrI</span>d')}
+                         /&gt;
+             );
+    }
+}
+</code></pre><p>在store(redux1.0后改名为reducer)创建的时候，需要用bindingStore方法创建。sotore中的初始对象如果需要绑定，需要先声明好，比如你要绑定下面store中的showUser.name这个属性，那么store中showUser必须要默认声明好showUser:{}，然后valueLink={this.binding(“showUser,name”)}</p>
+<pre><code><span class="keyword">import</span> {UserTypes,MainTypes} <span class="keyword">from</span> <span class="string">'../constants/ActionTypes'</span>
+<span class="keyword">import</span> bindingStore <span class="keyword">from</span> <span class="string">'../lib/bindingStore'</span>
+<span class="keyword">import</span> <span class="keyword">Immutable</span> <span class="keyword">from</span> <span class="string">'immutable'</span>
+
+const initialState = <span class="keyword">Immutable</span>.fromJS({
+    users: [],
+    totalCount: <span class="number">0</span>,
+    showUser:{},
+    userRoles:[],
+    userPermissions:[],
+    rolesToSelect:{
+        roles:[]
+    }
+});
+<span class="comment">//TODO defend override redux,write more code</span>
+export <span class="keyword">default</span> bindingStore(<span class="string">'users'</span>,initialState, {
+    [UserTypes.LOAD_USERS]: (data, action) =&gt; {
+        <span class="keyword">return</span> data.merge(<span class="keyword">Immutable</span>.fromJS(action.data));
+    }
+})
+</code></pre><h1 id="2-_全局styles">2. 全局styles</h1><p>react的css设置推崇inline-style,就是所有的组件或者dom对象的css直接设置在style={{}}里。这样做的好处是可以利用js的逻辑能力，变化css,并且对组件的封装性加强。我们用publicStyle这个注解做全局的公用inline-style,用法如下。其中this.mergeStyle是publicStyle注进来的方法，其参数为更重要级的style，比如参数中有input对象，优先级比publicStyles里面的高，全局的inline-style写到publicStyle里面，如下面第二段代码。</p>
+<pre><code><span class="annotation">@publicStyle</span>
+<span class="annotation">@linkedStateMixin</span>
+export <span class="keyword">default</span>
+<span class="class"><span class="keyword">class</span> <span class="title">UserManager</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Component</span> {</span>
+    constructor(props) {
+        <span class="keyword">super</span>(props);            
+        <span class="keyword">this</span>.styles = <span class="keyword">this</span>.mergeStyle(<span class="keyword">this</span>.getStyles());
+    }
+
+    render(){
+        const styles = <span class="keyword">this</span>.styles;
+        <span class="keyword">return</span> (
+            &lt;input <span class="class"><span class="keyword">type</span>=</span><span class="symbol">'tex</span>t' style={styles.input}/&gt;
+        )
+    }
+
+    getStyles(){
+        <span class="keyword">return</span> {
+            input:{
+                margin:<span class="number">10</span>
+            }
+        }
+    }
+}
+</code></pre><p>publicStyle里面的代码是全局inline-style.   </p>
+<pre><code>export <span class="keyword">default</span> DecoratedComponent =&gt; {
+    DecoratedComponent.prototype.publicStyles = function () {
+        let styles = {
+            paper: {
+                padding: <span class="number">25</span>
+            },
+            flexColumn: {
+                display: <span class="string">'flex'</span>,
+                flexDirection: <span class="string">'column'</span>,
+                flexWrap: <span class="string">'nowrap'</span>,
+            },
+            flexRow: {
+                display: <span class="string">'flex'</span>,
+                flexDirection: <span class="string">'row'</span>,
+                flexWrap: <span class="string">'nowrap'</span>,
+            },
+            flex: {
+                display: <span class="string">'flex'</span>,
+                flexDirection: <span class="string">'row'</span>,
+                flexWrap: <span class="string">'nowrap'</span>
+            },
+            searchFlex: {
+                display: <span class="string">'flex'</span>,
+                flexDirection: <span class="string">'row'</span>,
+                flexWrap: <span class="string">'nowrap'</span>,
+                alignItems: <span class="string">'center'</span>
+            }
+        };
+        return styles;
+    }
+}
+</code></pre><h1 id="3-_自定义弹出框，普通弹出框的用法">3. 自定义弹出框，普通弹出框的用法</h1><h2 id="1-_自定义弹出框">1. 自定义弹出框</h2><p>首先在constants里面的ModalTypes里面添加一个枚举：</p>
+<pre><code><span class="literal">export</span> <span class="keyword">const</span> ModalTypes= {
+
+    ERROR_INFO:<span class="string">'ERROR_INFO'</span>,
+    DIALOG_EXAMPLE:<span class="string">'DIALOG_EXAMPLE'</span>
+}
+</code></pre><p>修改components下面的ModalRouter组件，添加刚才枚举所对应的组件。<br>自定义组件：</p>
+<pre><code><span class="keyword">import</span> <span class="type">React</span>, { <span class="type">Component</span>, <span class="type">PropTypes</span> } from <span class="symbol">'reac</span>t';
+<span class="keyword">import</span> {<span class="type">Button</span>,<span class="type">Input</span>,<span class="type">Grid</span>,<span class="type">Row</span>,<span class="type">Col</span>,<span class="type">Modal</span>} from <span class="symbol">'react</span>-bootstrap';
+<span class="keyword">import</span> <span class="type">PublicStyles</span> from '../decorators/<span class="type">PublicStyles</span>'
+
+<span class="annotation">@PublicStyles</span>
+export <span class="keyword">default</span>
+<span class="class"><span class="keyword">class</span> <span class="title">DialogExample</span> <span class="keyword"><span class="keyword">extends</span></span> <span class="title">Component</span> {</span>
+
+    static proTypes = {
+
+    };
+
+    render() {
+        let styles = <span class="keyword">this</span>.mergeStyle();
+        <span class="keyword">return</span> (
+            &lt;div&gt;
+                &lt;<span class="type">Modal</span>.<span class="type">Header</span> closeButton onHide={<span class="keyword">this</span>.props.onClose}&gt;
+                    &lt;<span class="type">Modal</span>.<span class="type">Title</span>&gt;
+                      title
+                    &lt;/<span class="type">Modal</span>.<span class="type">Title</span>&gt;
+
+                &lt;/<span class="type">Modal</span>.<span class="type">Header</span>&gt;
+                &lt;<span class="type">Modal</span>.<span class="type">Body</span>&gt;
+                   sadfsadf
+                &lt;/<span class="type">Modal</span>.<span class="type">Body</span>&gt;
+                &lt;<span class="type">Modal</span>.<span class="type">Footer</span>&gt;
+                    &lt;<span class="type">Button</span>&gt;test1&lt;/<span class="type">Button</span>&gt;
+                &lt;/<span class="type">Modal</span>.<span class="type">Footer</span>&gt;
+            &lt;/div&gt;
+        );
+    }
+}
+</code></pre><p>修改ModalRouter.js:</p>
+<pre><code>renderModal() {
+        <span class="keyword">const</span> {modalType} = <span class="keyword">this</span>.props;
+        <span class="keyword">switch</span> (modalType) {
+            <span class="keyword">case</span> ModalTypes.ERROR_INFO:
+                <span class="keyword">return</span> (
+                    &lt;ErrorInfo onClose={<span class="keyword">this</span>.props.close} {...<span class="keyword">this</span>.props}/&gt;
+                );
+            <span class="keyword">case</span> ModalTypes.ADJUSTMENT_INSERT:
+                <span class="keyword">return</span> (
+                    &lt;AdjustmentInsert onClose={<span class="keyword">this</span>.props.close} {...<span class="keyword">this</span>.props} /&gt;
+                )
+            <span class="keyword">case</span> ModalTypes.DIALOG_EXAMPLE:
+                <span class="keyword">return</span> (
+                    &lt;DialogExample onClose={<span class="keyword">this</span>.props.close} {...<span class="keyword">this</span>.props} /&gt;
+                )
+
+            <span class="keyword">default</span> :
+                <span class="keyword">return</span>;
+        }
+    }
+</code></pre><p>调用自定义弹框：</p>
+<pre><code><span class="keyword">import</span> * as MainActions from <span class="string">'../actions/MainActions.js'</span>
+<span class="comment">//构造函数</span>
+<span class="constructor"><span class="keyword">constructor</span>(props) </span>{
+        <span class="keyword">super</span>(props);
+        <span class="keyword">this</span>.actions = bindActionCreators(MainActions, props.dispatch);
+    }
+<span class="comment">//调用语句</span>
+<span class="keyword">this</span>.actions.showAlert({modalType:ModalTypes.DIALOG_EXAMPLE});
+</code></pre><p>如果是想用预制的普通文字弹出框直接调用：</p>
+<pre><code><span class="tag">this</span><span class="class">.actions</span><span class="class">.showAlert</span>(<span class="rules">{
+        <span class="rule"><span class="attribute">modalType</span>:<span class="value">ModalTypes.ERROR_INFO,
+        title: <span class="string">'titleTest'</span>,
+        info: <span class="string">'contentTest'</span>,
+        buttonFunc:[
+            {
+                event: function (target) {
+                    target.props.<span class="function">drawbackScheme</span>(target.props.scheme, btn)</span></span>;
+                }</span>,
+                <span class="tag">text</span>: "确认",
+                <span class="tag">style</span>: "<span class="tag">danger</span>"
+
+            },
+            <span class="rules">{
+                <span class="rule"><span class="attribute">event</span>:<span class="value"> function (target) {
+                    target.props.<span class="function">closeAlert</span>()
+                </span></span></span>},
+                <span class="tag">text</span>: "取消",
+                <span class="tag">style</span>: "<span class="tag">warning</span>"
+
+            }
+        ]
+    });
+</code></pre></div><div class="tags"><a href="/tags/工作/">工作</a></div><div class="post-nav"><a href="/2015/09/01/standard-1/" class="pre"><i class="icon-previous">常见坑集合</i></a><a href="/2015/08/02/standard/" class="next">开发环境<i class="icon-next"></i></a></div></div></div></div><div class="pure-u-1-4"><div id="sidebar"><div class="widget"><form action="https://www.baidu.com/baidu" method="get" accept-charset="utf-8" class="search-form"><input type="search" name="word" maxlength="20" placeholder="Search" class="search-form-input"/><input type="hidden" name="si" value="uedfamily.com"/><input name="tn" type="hidden" value="bds"/><input name="cl" type="hidden" value="3"/><input name="ct" type="hidden" value="2097152"/><input name="s" type="hidden" value="on"/></form></div><div class="widget"><div class="widget-title">分类</div></div><div class="widget"><div class="widget-title">标签</div><div class="tagcloud"><a href="/tags/工作/" style="font-size: 15px;">工作</a></div></div><div class="widget"><div class="widget-title">最新文章</div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/3015/08/02/index/">索引</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/09/app-new-project/">新app开发流程梳理</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/09/apollo-pc-index/">阿波罗PC开发资源</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/08/app/">app</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/01/standard-1/">常见坑集合</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/01/apollo-pc/">阿波罗PC自开发内容</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/08/02/standard/">开发环境</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/08/02/openSource/">开源索引</a></li></ul></div><div class="widget"><div class="widget-title">友情链接</div></div></div></div></div><div id="footer">© <a href="/" rel="nofollow">dper-f2e.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div><a id="rocket" href="#top" class="show"></a><script src="/js/jquery.min.js" type="text/javascript"></script>
+<script src="/js/totop.js" type="text/javascript"></script><script src="/js/fancybox.pack.js" type="text/javascript"></script>
+<script src="/js/jquery.fancybox.js" type="text/javascript"></script><link rel="stylesheet" href="/css/jquery.fancybox.css" type="text/css"></div></body></html>
