@@ -20,7 +20,7 @@ App项目统一存放于[app-trade-f2e](http://code.dianpingoa.com/groups/app-tr
 ========
 确保本地已经安装了[nodejs](http://www.nodejs.org/)、cortex和anywhere；
 *  前往nodejs官网下载安装nodejs；
-*  推荐安装淘宝镜像:npm install -g cnpm --registry=https://registry.npm.taobao.org ；
+*  推荐安装淘宝镜像:npm install -g cnpm - -registry=https://registry.npm.taobao.org ；
 *  执行cnpm install cortex -g 安装全局cortex项目构建工具；cortex文档请猛戳此链接：*[http://book.ctx.io/zh-cn/index.html](http://book.ctx.io/zh-cn/index.html)*;
 *  执行cnpm install anywhere -g安装静态服务器，优点是进入任何目录执行anywhere都会以当前目录为主目录启动服务；
 
